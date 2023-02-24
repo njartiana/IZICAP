@@ -73,6 +73,7 @@
                 </configuration>
             </plugin>
         </plugins>
+        <finalName>demo-token</finalName>
     </build>
 </project>
 
