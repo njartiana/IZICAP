@@ -73,7 +73,7 @@
                 </configuration>
             </plugin>
         </plugins>
-        <finalName>izicap_api</finalName>
+        <finalName>izicap-api</finalName>
     </build>
 </project>
 
