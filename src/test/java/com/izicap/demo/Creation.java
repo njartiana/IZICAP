@@ -21,7 +21,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.izicap.demo.token.controller.UserController;
 import com.izicap.demo.token.controller.dtos.UserAndPassword;
-import com.izicap.demo.token.services.UserService;
+
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, classes = {com.izicap.demo.token.Launcher.class})

@@ -21,16 +21,13 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.bind.annotation.RequestBody;
 
-import com.izicap.demo.token.controller.UserController;
-import com.izicap.demo.token.controller.dtos.*;
-import com.izicap.demo.token.entities.User;
-import com.izicap.demo.token.services.*;
+import com.izicap.demo.token.controller.dtos.UserAndPassword;
+
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, classes = {com.izicap.demo.token.Launcher.class})
-public class GenerateToken {
+public class ManageToken {
 
 	@Autowired
 	private TestRestTemplate testRestTemplate;
@@ -40,7 +37,7 @@ public class GenerateToken {
 	int randomServerPort;
 	
 	
-	public String token;
+	public static String token;
 	private String creationDate, expirationDate;
 	
 	//Login and paswword valide
@@ -88,6 +85,45 @@ public class GenerateToken {
 	}
 	
 	@Test
+	public void testGenerateNewToken() throws URISyntaxException, InterruptedException {
+		Thread.sleep(60000);
+		String responseBody;
+		String GeneratedToken;
+		String currentToken;
+		
+		
+		final String baseUrl = "http://localhost:"+randomServerPort+"/tokens";
+		URI uri = new URI(baseUrl);
+		UserAndPassword userAndPassword = new UserAndPassword(userAdmin, userPassword);
+		
+		headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		
+		HttpEntity<UserAndPassword> request = new HttpEntity<>(userAndPassword, headers);
+		
+		ResponseEntity<String> result = this.testRestTemplate.postForEntity(uri, request, String.class);
+		
+		responseBody = result.getBody();
+		System.out.println("ICI-----> "+responseBody);
+		
+		//Extract each value on the body response
+		JSONParser jsonPaser = new JSONParser();
+		try {
+			JSONObject jsonObject = (JSONObject)jsonPaser.parse(responseBody);
+			GeneratedToken = (String) jsonObject.get("token");
+			
+			System.out.println("Refresh token : " + GeneratedToken);
+			if(GeneratedToken != token && result.getStatusCodeValue() == 201) {
+				Assert.assertNotEquals(token, GeneratedToken);
+				Assert.assertEquals(201, result.getStatusCodeValue());
+				System.out.println("successful token Generated " + result.getStatusCodeValue() + " (OK)");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@Test
 	public void testRefreshToken() throws URISyntaxException {
 		String responseBody;
 		String tokenRefresh;
@@ -115,7 +151,8 @@ public class GenerateToken {
 			tokenRefresh = (String) jsonObject.get("token");
 			
 			System.out.println("Refresh token : " + tokenRefresh);
-			if(result.getStatusCodeValue() == 200) {
+			if(result.getStatusCodeValue() == 200 && tokenRefresh == token) {
+				Assert.assertEquals(token, tokenRefresh);
 				Assert.assertEquals(200, result.getStatusCodeValue());
 				System.out.println("successful token refresh " + result.getStatusCodeValue() + " (OK)");
 			}
@@ -123,7 +160,6 @@ public class GenerateToken {
 			e.printStackTrace();
 		}
 	}
-	
 	
 	@Test
 	public void testUnauthorizeToken() throws URISyntaxException {
