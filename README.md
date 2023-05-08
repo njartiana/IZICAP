@@ -34,6 +34,8 @@ Notes:
 - if caller has an existing token that is expired, a new token is created.
 
 
+
+
 ### User creation ###
 
 POST /users
@@ -61,3 +63,35 @@ Response : `{"username": "String", "id": Long}`
 1. Build the service using maven
 2. Build a docker image
 3. Run the docker image. Inside the container, the service listens on port 8080. Use `docker run` with a -p argument to specify the external listening port, e.g `-p 80:8080/tcp` to expose the service on port 80.
+
+## Jenkinsfile ##
+pipeline{
+    agent any
+    tools{
+        maven "M2_HOME"
+    }
+    stages{
+        stage("Build maven project"){
+            steps{
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/njartiana/IZICAP']]])
+                sh 'mvn clean install'
+            }
+        }
+        stage("Build and run service"){
+            steps{
+                script{
+                    sh 'mvn compile && mvn install'
+                    sh 'cd target && java -jar izicap-api.jar'
+                }
+            }
+        }
+
+        /*stage("call Robot framework job"){
+            steps{
+                script{
+                    build job: "TA_IZICAP_Robot_Framework", wait: false
+                }
+            }
+        }*/
+    }
+}
